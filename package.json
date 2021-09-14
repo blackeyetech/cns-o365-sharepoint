@@ -1,8 +1,8 @@
 {
-  "version": "1.4.0",
-  "name": "@cn-shell/o365-outlook",
-  "description": "A Cloud Native extension for Office 365 Outlook",
-  "main": "./dist/o365-outlook.js",
+  "version": "0.0.0",
+  "name": "@cn-shell/o365-sharepoint",
+  "description": "A Cloud Native extension for Office 365 Sharepoint",
+  "main": "./dist/o365-sharepoint.js",
   "bin": "",
   "files": [
     "dist/**/*"
