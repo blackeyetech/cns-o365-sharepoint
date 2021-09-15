@@ -3,8 +3,8 @@ import { CNO365Sharepoint } from "./o365-sharepoint";
 import inquirer from "inquirer";
 // import EasyTable from "easy-table";
 
-import fs from "fs";
-import path from "path";
+// import fs from "fs";
+// import path from "path";
 
 // enums here
 enum Prompts {
@@ -88,12 +88,7 @@ async function getItems(
     return;
   }
 
-  let items = await msSharepoint.getListItems(
-    siteId,
-    listId,
-    // ["id", "email", "name", "covered_by"],
-    // "fields/email eq 'kieran.northime@options-it.com'",
-  );
+  let items = await msSharepoint.getListItems(siteId, listId);
 
   if (items === undefined) {
     return;
