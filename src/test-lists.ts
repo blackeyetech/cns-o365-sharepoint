@@ -24,21 +24,8 @@ enum TestChoices {
   QUIT = "Quit",
 }
 
-// Utility functions here
-async function getSiteId(
-  msSharepoint: CNO365Sharepoint,
-  site: string,
-): Promise<string | undefined> {
-  let siteId = await msSharepoint.getSiteId(site);
-
-  return siteId;
-}
-
 // Tests here
-async function getListId(
-  msSharepoint: CNO365Sharepoint,
-  siteId: string,
-): Promise<void> {
+async function getListId(msSharepoint: CNO365Sharepoint): Promise<void> {
   let answer = await inquirer.prompt([
     {
       type: "input",
@@ -49,16 +36,13 @@ async function getListId(
 
   let listName = answer[Prompts.LIST];
 
-  let id = await msSharepoint.getListId(siteId, listName);
+  let id = await msSharepoint.getListId(listName);
 
   console.log(id);
 }
 
-async function getLists(
-  msSharepoint: CNO365Sharepoint,
-  siteId: string,
-): Promise<void> {
-  let lists = await msSharepoint.getLists(siteId);
+async function getLists(msSharepoint: CNO365Sharepoint): Promise<void> {
+  let lists = await msSharepoint.getLists();
 
   if (lists === undefined) {
     return;
@@ -69,10 +53,7 @@ async function getLists(
   }
 }
 
-async function getItems(
-  msSharepoint: CNO365Sharepoint,
-  siteId: string,
-): Promise<void> {
+async function getItems(msSharepoint: CNO365Sharepoint): Promise<void> {
   let answer = await inquirer.prompt([
     {
       type: "input",
@@ -82,13 +63,13 @@ async function getItems(
   ]);
 
   let listName = answer[Prompts.LIST];
-  let listId = await msSharepoint.getListId(siteId, listName);
+  let listId = await msSharepoint.getListId(listName);
 
   if (listId === undefined) {
     return;
   }
 
-  let items = await msSharepoint.getListItems(siteId, listId);
+  let items = await msSharepoint.getListItems(listId);
 
   if (items === undefined) {
     return;
@@ -99,10 +80,7 @@ async function getItems(
   }
 }
 
-async function getItem(
-  msSharepoint: CNO365Sharepoint,
-  siteId: string,
-): Promise<void> {
+async function getItem(msSharepoint: CNO365Sharepoint): Promise<void> {
   let answer = await inquirer.prompt([
     {
       type: "input",
@@ -112,7 +90,7 @@ async function getItem(
   ]);
 
   let listName = answer[Prompts.LIST];
-  let listId = await msSharepoint.getListId(siteId, listName);
+  let listId = await msSharepoint.getListId(listName);
 
   if (listId === undefined) {
     return;
@@ -128,7 +106,7 @@ async function getItem(
 
   let itemId = answer[Prompts.ITEM];
 
-  let item = await msSharepoint.getListItem(siteId, listId, itemId);
+  let item = await msSharepoint.getListItem(listId, itemId);
 
   if (item === undefined) {
     return;
@@ -137,10 +115,7 @@ async function getItem(
   console.log(item.id, item.fields);
 }
 
-async function deleteItem(
-  msSharepoint: CNO365Sharepoint,
-  siteId: string,
-): Promise<void> {
+async function deleteItem(msSharepoint: CNO365Sharepoint): Promise<void> {
   let answer = await inquirer.prompt([
     {
       type: "input",
@@ -150,7 +125,7 @@ async function deleteItem(
   ]);
 
   let listName = answer[Prompts.LIST];
-  let listId = await msSharepoint.getListId(siteId, listName);
+  let listId = await msSharepoint.getListId(listName);
 
   if (listId === undefined) {
     return;
@@ -166,15 +141,12 @@ async function deleteItem(
 
   let itemId = answer[Prompts.ITEM];
 
-  let success = await msSharepoint.deleteListItem(siteId, listId, itemId);
+  let success = await msSharepoint.deleteListItem(listId, itemId);
 
   console.log(success);
 }
 
-async function updateItem(
-  msSharepoint: CNO365Sharepoint,
-  siteId: string,
-): Promise<void> {
+async function updateItem(msSharepoint: CNO365Sharepoint): Promise<void> {
   let answer = await inquirer.prompt([
     {
       type: "input",
@@ -184,7 +156,7 @@ async function updateItem(
   ]);
 
   let listName = answer[Prompts.LIST];
-  let listId = await msSharepoint.getListId(siteId, listName);
+  let listId = await msSharepoint.getListId(listName);
 
   if (listId === undefined) {
     return;
@@ -200,7 +172,7 @@ async function updateItem(
 
   let itemId = answer[Prompts.ITEM];
 
-  let success = await msSharepoint.updateListItem(siteId, listId, itemId, {
+  let success = await msSharepoint.updateListItem(listId, itemId, {
     name: "Kieran",
   });
 
@@ -209,9 +181,6 @@ async function updateItem(
 
 // Main here
 (async () => {
-  let msSharepoint = new CNO365Sharepoint("Test-Sharepoint");
-  await msSharepoint.init();
-
   let answer = await inquirer.prompt([
     {
       type: "input",
@@ -220,11 +189,10 @@ async function updateItem(
     },
   ]);
 
-  let siteId = await getSiteId(msSharepoint, answer[Prompts.SITE]);
+  let siteName = answer[Prompts.SITE];
 
-  if (siteId === undefined) {
-    return;
-  }
+  let msSharepoint = new CNO365Sharepoint("Test-Sharepoint", siteName);
+  await msSharepoint.init();
 
   while (1) {
     answer = await inquirer.prompt([
@@ -250,24 +218,24 @@ async function updateItem(
 
     switch (answer[Prompts.TEST]) {
       case TestChoices.LIST:
-        await getListId(msSharepoint, siteId);
+        await getListId(msSharepoint);
         break;
 
       case TestChoices.LISTS:
-        await getLists(msSharepoint, siteId);
+        await getLists(msSharepoint);
         break;
 
       case TestChoices.ITEMS:
-        await getItems(msSharepoint, siteId);
+        await getItems(msSharepoint);
         break;
       case TestChoices.ITEM:
-        await getItem(msSharepoint, siteId);
+        await getItem(msSharepoint);
         break;
       case TestChoices.DEL:
-        await deleteItem(msSharepoint, siteId);
+        await deleteItem(msSharepoint);
         break;
       case TestChoices.UPDATE:
-        await updateItem(msSharepoint, siteId);
+        await updateItem(msSharepoint);
         break;
     }
   }

@@ -7,6 +7,7 @@ import { CNO365 } from "@cn-shell/o365";
 import * as MSGraph from "@microsoft/microsoft-graph-types";
 
 // Misc config consts here
+const CFG_O365_SHAREPOINT_SITE = "O365_SHAREPOINT_SITE";
 
 // Misc consts here
 const GRAPH_API_VERSION = "v1.0";
@@ -21,15 +22,32 @@ const GRAPH_API_VERSION = "v1.0";
 // CNO365Sharepoint class here
 class CNO365Sharepoint extends CNO365 {
   // Properties here
+  private _siteId: string;
+  private _siteName: string;
 
   // Constructor here
-  constructor(name: string, master?: CNShell) {
+  constructor(name: string, siteName?: string, master?: CNShell) {
     super(name, master);
+
+    if (siteName === undefined) {
+      this._siteName = this.getRequiredCfg(CFG_O365_SHAREPOINT_SITE);
+    } else {
+      this._siteName = siteName;
+    }
   }
 
   // Abstract method implementations here
   async start(): Promise<boolean> {
     await super.start();
+
+    let siteId = await this.getSiteId(this._siteName);
+
+    if (siteId === undefined) {
+      throw Error(`Can't find sharepoint site ${this._siteName}`);
+    }
+
+    this._siteId = siteId;
+
     return true;
   }
 
@@ -63,7 +81,7 @@ class CNO365Sharepoint extends CNO365 {
 
     return site;
   }
-  // Public methods here
+
   async getSiteId(siteName: string): Promise<string | undefined> {
     let rootSite = await this.getRootSite();
     let hostname = rootSite?.siteCollection?.hostname;
@@ -88,10 +106,11 @@ class CNO365Sharepoint extends CNO365 {
     return site.id;
   }
 
-  async getLists(siteId: string): Promise<MSGraph.List[] | undefined> {
+  // Public methods here
+  async getLists(): Promise<MSGraph.List[] | undefined> {
     let res = await this.httpReq({
       method: "get",
-      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${siteId}/lists`,
+      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${this._siteId}/lists`,
 
       headers: {
         Authorization: `Bearer ${this._token}`,
@@ -99,7 +118,7 @@ class CNO365Sharepoint extends CNO365 {
     }).catch(e => {
       this.error(
         "Error while getting sharepoint lists for site ID (%s) - (%s)",
-        siteId,
+        this._siteId,
         e,
       );
     });
@@ -113,11 +132,8 @@ class CNO365Sharepoint extends CNO365 {
     return lists;
   }
 
-  async getListId(
-    siteId: string,
-    listName: string,
-  ): Promise<string | undefined> {
-    let lists = await this.getLists(siteId);
+  async getListId(listName: string): Promise<string | undefined> {
+    let lists = await this.getLists();
 
     let list = lists?.find(el => el.name === listName);
 
@@ -129,13 +145,12 @@ class CNO365Sharepoint extends CNO365 {
   }
 
   async getListItem(
-    siteId: string,
     listId: string,
     id: string,
   ): Promise<MSGraph.ListItem | undefined> {
     let res = await this.httpReq({
       method: "get",
-      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${siteId}/lists/${listId}/items/${id}?expand=fields`,
+      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${this._siteId}/lists/${listId}/items/${id}?expand=fields`,
 
       headers: {
         Authorization: `Bearer ${this._token}`,
@@ -156,12 +171,11 @@ class CNO365Sharepoint extends CNO365 {
   }
 
   async getListItems(
-    siteId: string,
     listId: string,
     select: string[] = [],
     filter?: string,
   ): Promise<MSGraph.ListItem[] | undefined> {
-    let url = `${this._resource}/${GRAPH_API_VERSION}/sites/${siteId}/lists/${listId}/items`;
+    let url = `${this._resource}/${GRAPH_API_VERSION}/sites/${this._siteId}/lists/${listId}/items`;
 
     if (select.length) {
       url = `${url}?expand=fields($select=${select.join(",")})`;
@@ -196,14 +210,13 @@ class CNO365Sharepoint extends CNO365 {
   }
 
   async updateListItem(
-    siteId: string,
     listId: string,
     id: string,
     columns: { [key: string]: any },
   ): Promise<boolean> {
     let res = await this.httpReq({
       method: "patch",
-      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${siteId}/lists/${listId}/items/${id}/fields`,
+      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${this._siteId}/lists/${listId}/items/${id}/fields`,
       data: columns,
       headers: {
         Authorization: `Bearer ${this._token}`,
@@ -226,13 +239,12 @@ class CNO365Sharepoint extends CNO365 {
   }
 
   async addListItem(
-    siteId: string,
     listId: string,
     fields: { [key: string]: any },
   ): Promise<string> {
     let res = await this.httpReq({
       method: "post",
-      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${siteId}/lists/${listId}/items`,
+      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${this._siteId}/lists/${listId}/items`,
       data: { fields },
       headers: {
         Authorization: `Bearer ${this._token}`,
@@ -253,14 +265,10 @@ class CNO365Sharepoint extends CNO365 {
     return res.data.id;
   }
 
-  async deleteListItem(
-    siteId: string,
-    listId: string,
-    id: string,
-  ): Promise<boolean> {
+  async deleteListItem(listId: string, id: string): Promise<boolean> {
     let res = await this.httpReq({
       method: "delete",
-      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${siteId}/lists/${listId}/items/${id}`,
+      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${this._siteId}/lists/${listId}/items/${id}`,
 
       headers: {
         Authorization: `Bearer ${this._token}`,
