@@ -56,12 +56,12 @@
     "sinon": "^9.2.0"
   },
   "dependencies": {
-    "@cn-shell/o365": "^1.0.1",
+    "@cn-shell/o365": "^1.1.0",
     "@microsoft/microsoft-graph-types": "^1.41.0",
     "@types/inquirer": "^7.3.3",
-    "@types/node": "^12.20.24",
+    "@types/node": "^12.20.25",
     "cn-shell": "^2.18.1",
-    "inquirer": "^8.1.2",
+    "inquirer": "^8.1.4",
     "typescript": "^3.9.10"
   },
   "repository": {

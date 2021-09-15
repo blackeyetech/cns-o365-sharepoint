@@ -2,7 +2,7 @@
 import CNShell from "cn-shell";
 import { CNO365 } from "@cn-shell/o365";
 
-import qs from "qs";
+// import qs from "qs";
 
 import * as MSGraph from "@microsoft/microsoft-graph-types";
 
