@@ -147,10 +147,19 @@ class CNO365Sharepoint extends CNO365 {
   async getListItem(
     listId: string,
     id: string,
+    select: string[] = [],
   ): Promise<MSGraph.ListItem | undefined> {
+    let url = `${this._resource}/${GRAPH_API_VERSION}/sites/${this._siteId}/lists/${listId}/items/${id}`;
+
+    if (select.length) {
+      url = `${url}?expand=fields($select=${select.join(",")})`;
+    } else {
+      url = `${url}?expand=fields`;
+    }
+
     let res = await this.httpReq({
       method: "get",
-      url: `${this._resource}/${GRAPH_API_VERSION}/sites/${this._siteId}/lists/${listId}/items/${id}?expand=fields`,
+      url,
 
       headers: {
         Authorization: `Bearer ${this._token}`,
